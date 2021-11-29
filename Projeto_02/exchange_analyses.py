@@ -1,23 +1,25 @@
-'''
+"""
 Author : Mateus Eloi da SIlva Bastos
+Author : Rafael Garcia Dantas
 Date: Nov. 2021
 
 This project contains some analyzes made over the exchange rate over the years.
 Enjoy :)
-'''
+"""
 
-#imports
+# imports
 import logging
+from matplotlib import style, pyplot as plt
 import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib import style
 
 # Logging configs
 logging.basicConfig(
-    filename='Logs/exchange_analyses.log',
+    filename="Logs/exchange_analyses.log",
     level=logging.INFO,
-    filemode='w',
-    format='%(name)s - %(levelname)s - %(message)s')
+    filemode="w",
+    format="%(name)s - %(levelname)s - %(message)s",
+)
+
 
 def read_data(file_path):
     """
@@ -32,101 +34,115 @@ def read_data(file_path):
     try:
         data_frame = pd.read_csv(file_path)
         return data_frame
-    except: # pylint: disable=bare-except
-        logging.error("File does not found %s",file_path)
+    except:  # pylint: disable=bare-except
+        logging.error("File does not found %s", file_path)
         return None
 
-exchange_rates = read_data("euro-daily-hist_1999_2020.csv")
 
-# Run some transformations to make the data easier to analyze
-exchange_rates.rename(columns={'[US dollar ]': 'US_dollar',
-                               'Period\\Unit:': 'Time'},
-                      inplace=True)
-exchange_rates.Time = pd.to_datetime(exchange_rates.Time)
-exchange_rates.sort_values('Time', inplace=True)
-exchange_rates.reset_index(drop=True, inplace=True)
+def plot_usa_governments(euro_to_dollar_df: pd.DataFrame):
+    """# Let's analyze the behavior of the exchange rate in different
+    governments (bush, Obama and Trump).
 
-# Taking just dollar values to analyse
-euro_to_dollar = exchange_rates[['Time', 'US_dollar']]
+    Args:
+        euro_to_dollar_df (pd.DataFrame): euro to dollar dataframe.
+    """
+    # bot = (b)ush (o)bama (t)rump :)
+    bot = euro_to_dollar_df[
+        (euro_to_dollar_df.Time.dt.year >= 2001) & euro_to_dollar_df.Time.dt.year < 2021
+    ]
 
-# Fixing (Drop the '-' rows)
-euro_to_dollar.drop(euro_to_dollar[euro_to_dollar.US_dollar == '-'].index, inplace=True)
+    # Get data from bush, Obama and Trump governments.
+    bush = bot[bot.Time.dt.year < 2009]
+    obama = bot[(bot.Time.dt.year >= 2009) & (bot.Time.dt.year < 2017)]
+    trump = bot[bot.Time.dt.year >= 2017]
 
-# Transform US_dollar to a float type
-euro_to_dollar.US_dollar = pd.to_numeric(euro_to_dollar.US_dollar, downcast="float")
+    # Plotting the Euro-USD variation by Presidents
+    style.use("fivethirtyeight")
+    plt.figure(figsize=(15, 6))
 
-'''
-add a new column called rolling_mean.
-Basically we just get a mean of 30 days to reduce the number of point on graph
-'''
-euro_to_dollar['rolling_mean'] = euro_to_dollar['US_dollar'].rolling(30).mean()
+    plt.plot(bush.Time, bush.rolling_mean, label="Bush", color="#000000")
+    plt.plot(obama.Time, obama.rolling_mean, label="Obama", color="#8B0000")
+    plt.plot(trump.Time, trump.rolling_mean, label="Trump", color="#0000CD")
 
-# Let's analyze the behavior of the exchange rate in different governments (bush, Obama and Trump)
-# Get data from bush, Obama and Trump governments
+    plt.legend()
+    plt.title("Euro-USD variation between 2001 and 2021")
+    plt.savefig("Images/Euro_USD.png")
 
-# bot = (b)ush (o)bama (t)rump :)
-bot = euro_to_dollar[(euro_to_dollar.Time.dt.year >= 2001) & euro_to_dollar.Time.dt.year < 2021]
 
-bush = bot[bot.Time.dt.year < 2009]
-obama = bot[(bot.Time.dt.year >= 2009) & (bot.Time.dt.year < 2017)]
-trump = bot[bot.Time.dt.year >= 2017]
+def plot_brazil_goverments(euro_to_real_df: pd.DataFrame):
+    """Plot graph with Euro-Real variation between 2000 and 2021.
 
-# Plotting the Euro-USD variation by Presidents
-style.use('fivethirtyeight')
+    Let's analyze the behavior of the exchange rate in different
+     Brazilian governments (FHC, Lula, Dilma-Temer and Bolsonaro).
 
-plt.figure(figsize=(15, 6))
+    Args:
+        euro_to_real (pd.DataFrame): euro to real dataframe.
+    """
+    # fldb = (f)hc, (l)ula, (d)ilma-Temer and (b)olsonaro :)
+    fldb = euro_to_real_df[
+        (euro_to_real_df.Time.dt.year >= 2000) & euro_to_real_df.Time.dt.year < 2021
+    ]
 
-plt.plot(bush.Time, bush.rolling_mean,
-         label="Bush", color='#000000')
-plt.plot(obama.Time, obama.rolling_mean,
-         label="Obama", color='#8B0000')
-plt.plot(trump.Time, trump.rolling_mean,
-         label="Trump", color='#0000CD')
+    # Get data from FHC, Lula, Dilma-Temer and Bolsonaro governments
+    fhc = fldb[fldb.Time.dt.year < 2003]
+    lula = fldb[(fldb.Time.dt.year >= 2003) & (fldb.Time.dt.year < 2011)]
+    dilma_temer = fldb[(fldb.Time.dt.year >= 2011) & (fldb.Time.dt.year < 2019)]
+    bolsonaro = fldb[fldb.Time.dt.year >= 2019]
 
-plt.legend()
-plt.title('Euro-USD variation between 2001 and 2021')
+    # Plotting the Euro-Real variation by Presidents
+    plt.figure(figsize=(15, 6))
 
-plt.savefig("Images/Euro_USD.png")
+    plt.plot(fhc.Time, fhc.rolling_mean, label="FHC", color="#000000")
+    plt.plot(lula.Time, lula.rolling_mean, label="Lula", color="#8B0000")
+    plt.plot(
+        dilma_temer.Time, dilma_temer.rolling_mean, label="Dilma-Temer", color="#0000CD"
+    )
+    plt.plot(bolsonaro.Time, bolsonaro.rolling_mean, label="Bolsonaro", color="#006600")
 
-# Make the same thing to Real
-# Analyse Euro-Real Exchange rate Variation
+    plt.legend()
+    plt.title("Euro-Real variation between 2000 and 2021")
+    plt.savefig("Images/Euro-Real.png")
 
-# Transform Real Column
-exchange_rates.rename(columns={'[Brazilian real ]': 'Real'}, inplace = True)
 
-euro_to_real = exchange_rates[['Time', 'Real']]
-euro_to_real.drop(euro_to_real[euro_to_real.Real == '-'].index, inplace=True)
-euro_to_real.Real = pd.to_numeric(euro_to_real.Real, downcast="float")
+if __name__ == "__main__":
+    exchange_rates = read_data("euro-daily-hist_1999_2020.csv")
 
-# Getting a mean of 30 days to reduce the number of point on graph
-euro_to_real['rolling_mean'] = euro_to_real['Real'].rolling(30).mean()
+    # Run some transformations to make the data easier to analyze
+    exchange_rates = exchange_rates.rename(
+        columns={"[US dollar ]": "US_dollar", "Period\\Unit:": "Time"}
+    )
+    exchange_rates.Time = pd.to_datetime(exchange_rates.Time)
+    exchange_rates.sort_values("Time", inplace=True)
+    exchange_rates.reset_index(drop=True, inplace=True)
 
-''' Let's analyze the behavior of the exchange rate in different Brazilian governments
-(FHC, Lula, Dilma-Temer and Bolsonaro)'''
-# Get data from FHC, Lula, Dilma-Temer and Bolsonaro governments
+    # Taking just dollar values to analyse
+    euro_to_dollar = exchange_rates[["Time", "US_dollar"]]
 
-# fldb = (f)hc, (l)ula, (d)ilma-Temer and (b)olsonaro :)
-fldb = euro_to_real[(euro_to_real.Time.dt.year >= 2000) & euro_to_real.Time.dt.year < 2021]
+    # Fixing (Drop the '-' rows)
+    euro_to_dollar.drop(euro_to_dollar[euro_to_dollar.US_dollar == "-"].index, inplace=True)
 
-fhc = fldb[fldb.Time.dt.year < 2003]
-lula = fldb[(fldb.Time.dt.year >= 2003) & (fldb.Time.dt.year < 2011)]
-dilma_temer = fldb[(fldb.Time.dt.year >= 2011) & (fldb.Time.dt.year < 2019)]
-bolsonaro = fldb[fldb.Time.dt.year >= 2019]
+    # Transform US_dollar to a float type
+    euro_to_dollar.US_dollar = pd.to_numeric(euro_to_dollar.US_dollar, downcast="float")
 
-# Plotting the Euro-Real variation by Presidents
-plt.figure(figsize=(15, 6))
+    """
+    add a new column called rolling_mean.
+    Basically we just get a mean of 30 days to reduce the number of point on graph
+    """
+    euro_to_dollar["rolling_mean"] = euro_to_dollar["US_dollar"].rolling(30).mean()
 
-plt.plot(fhc.Time, fhc.rolling_mean,
-         label="FHC", color='#000000')
-plt.plot(lula.Time, lula.rolling_mean,
-         label="Lula", color='#8B0000')
-plt.plot(dilma_temer.Time, dilma_temer.rolling_mean,
-         label="Dilma-Temer", color='#0000CD')
-plt.plot(bolsonaro.Time, bolsonaro.rolling_mean,
-         label="Bolsonaro", color='#006600')
+    plot_usa_governments(euro_to_dollar)
 
-plt.legend()
+    # Make the same thing to Real
+    # Analyse Euro-Real Exchange rate Variation
 
-plt.title('Euro-Real variation between 2000 and 2021')
+    # Transform Real Column
+    exchange_rates = exchange_rates.rename(columns={"[Brazilian real ]": "Real"})
 
-plt.savefig("Images/Euro-Real.png")
+    euro_to_real = exchange_rates[["Time", "Real"]]
+    euro_to_real.drop(euro_to_real[euro_to_real.Real == "-"].index, inplace=True)
+    euro_to_real.Real = pd.to_numeric(euro_to_real.Real, downcast="float")
+
+    # Getting a mean of 30 days to reduce the number of point on graph
+    euro_to_real["rolling_mean"] = euro_to_real["Real"].rolling(30).mean()
+
+    plot_brazil_goverments(euro_to_real)
