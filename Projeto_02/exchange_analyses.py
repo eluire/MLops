@@ -14,7 +14,7 @@ import pandas as pd
 
 # Logging configs
 logging.basicConfig(
-    filename="Logs/exchange_analyses.log",
+    filename="logs/exchange_analyses.log",
     level=logging.INFO,
     filemode="w",
     format="%(name)s - %(levelname)s - %(message)s",
@@ -66,7 +66,7 @@ def plot_usa_governments(euro_to_dollar_df: pd.DataFrame):
 
     plt.legend()
     plt.title("Euro-USD variation between 2001 and 2021")
-    plt.savefig("Images/Euro_USD.png")
+    plt.savefig("images/Euro_USD.png")
 
 
 def plot_brazil_goverments(euro_to_real_df: pd.DataFrame):
@@ -101,11 +101,11 @@ def plot_brazil_goverments(euro_to_real_df: pd.DataFrame):
 
     plt.legend()
     plt.title("Euro-Real variation between 2000 and 2021")
-    plt.savefig("Images/Euro-Real.png")
+    plt.savefig("images/Euro-Real.png")
 
 
 if __name__ == "__main__":
-    exchange_rates = read_data("euro-daily-hist_1999_2020.csv")
+    exchange_rates = read_data("data/euro-daily-hist_1999_2020.csv")
 
     # Run some transformations to make the data easier to analyze
     exchange_rates = exchange_rates.rename(
