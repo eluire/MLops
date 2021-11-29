@@ -105,7 +105,7 @@ def plot_brazil_goverments(euro_to_real_df: pd.DataFrame):
 
 
 if __name__ == "__main__":
-    exchange_rates = read_data("euro-daily-hist_1999_2020.csv")
+    exchange_rates = read_data("data/euro-daily-hist_1999_2020.csv")
 
     # Run some transformations to make the data easier to analyze
     exchange_rates = exchange_rates.rename(
